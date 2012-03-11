@@ -23,11 +23,13 @@ class OperationFailed(WebdavException):
         self.actual_code = actual_code
         operation_name = self._OPERATIONS[method]
         self.reason = 'Failed to {operation_name} "{path}"'.format(**locals())
-        expected_code_str, actual_code_str = HTTP_CODES[expected_code], HTTP_CODES[actual_code]
+        expected_codes = (expected_code,) if isinstance(expected_code, Number) else expected_code
+        expected_codes_str = ", ".join('{} {}'.format(code, HTTP_CODES[code]) for code in expected_codes)
+        actual_code_str = HTTP_CODES[actual_code]
         msg = '''\
 {self.reason}.
   Operation     :  {method} {path}
-  Expected code :  {expected_code} {expected_code_str}
+  Expected code :  {expected_codes_str}
   Actual code   :  {actual_code} {actual_code_str}'''.format(**locals())
         super(OperationFailed, self).__init__(msg)
 
