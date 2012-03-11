@@ -61,10 +61,13 @@ class Client(object):
             self.cwd = '/' + stripped_path
         else:
             self.cwd += stripped_path
-    def mkdir(self, path):
-        self._send('MKCOL', path, 201)
-    def rmdir(self, path):
-        self.delete(str(path).rstrip('/') + '/')
+    def mkdir(self, path, safe=False):
+        expected_codes = 201 if not safe else (201, 301)
+        self._send('MKCOL', path, expected_codes)
+    def rmdir(self, path, safe=False):
+        path = str(path).rstrip('/') + '/'
+        expected_codes = 204 if not safe else (204, 404)
+        self._send('DELETE', path, expected_codes)
     def delete(self, path):
         self._send('DELETE', path, 204)
     def upload(self, local_path, remote_path):
