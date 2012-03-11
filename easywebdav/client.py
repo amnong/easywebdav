@@ -66,6 +66,19 @@ class Client(object):
     def mkdir(self, path, safe=False):
         expected_codes = 201 if not safe else (201, 301)
         self._send('MKCOL', path, expected_codes)
+    def mkdirs(self, path):
+        dirs = [d for d in path.split('/') if d]
+        if not dirs:
+            return
+        if path.startswith('/'):
+            dirs[0] = '/' + dirs[0]
+        old_cwd = self.cwd
+        try:
+            for dir in dirs:
+                self.mkdir(dir, safe=True)
+                self.cd(dir)
+        finally:
+            self.cd(old_cwd)
     def rmdir(self, path, safe=False):
         path = str(path).rstrip('/') + '/'
         expected_codes = 204 if not safe else (204, 404)
