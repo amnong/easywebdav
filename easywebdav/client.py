@@ -2,6 +2,10 @@ import requests
 import shutil
 from numbers import Number
 from httplib import responses as HTTP_CODES
+from urlparse import urlparse
+import xml.etree.cElementTree as xml
+from collections import namedtuple
+from cStringIO import StringIO
 
 class WebdavException(Exception):
     pass
@@ -9,12 +13,35 @@ class WebdavException(Exception):
 class ConnectionFailed(WebdavException):
     pass
 
+
+def codestr(code):
+    return HTTP_CODES.get(code, 'UNKNOWN')
+
+
+File = namedtuple('File', ['name', 'size', 'mtime', 'ctime'])
+
+
+def prop(elem, name, default=None):
+    child = elem.find('.//{DAV:}' + name)
+    return default if child is None else child.text
+
+
+def elem2file(elem):
+    return File(
+        prop(elem, 'href'),
+        int(prop(elem, 'getcontentlength', 0)),
+        prop(elem, 'getlastmodified', ''),
+        prop(elem, 'creationdate', ''),
+    )
+
+
 class OperationFailed(WebdavException):
     _OPERATIONS = dict(
         GET = "download",
         PUT = "upload",
         DELETE = "delete",
         MKCOL = "create directory",
+        PROPFIND = "list directory",
         )
     def __init__(self, method, path, expected_code, actual_code):
         self.method = method
@@ -24,8 +51,8 @@ class OperationFailed(WebdavException):
         operation_name = self._OPERATIONS[method]
         self.reason = 'Failed to {operation_name} "{path}"'.format(**locals())
         expected_codes = (expected_code,) if isinstance(expected_code, Number) else expected_code
-        expected_codes_str = ", ".join('{} {}'.format(code, HTTP_CODES[code]) for code in expected_codes)
-        actual_code_str = HTTP_CODES[actual_code]
+        expected_codes_str = ", ".join('{} {}'.format(code, codestr(code)) for code in expected_codes)
+        actual_code_str = codestr(actual_code)
         msg = '''\
 {self.reason}.
   Operation     :  {method} {path}
@@ -34,8 +61,11 @@ class OperationFailed(WebdavException):
         super(OperationFailed, self).__init__(msg)
 
 class Client(object):
-    def __init__(self, host, port=80, username=None, password=None):
-        self.baseurl = 'http://{}:{}'.format(host ,port)
+    def __init__(self, host, port=0, username=None, password=None,
+                 protocol='http'):
+        if not port:
+            port = 443 if protocol == 'https' else 80
+        self.baseurl = '{}://{}:{}'.format(protocol, host ,port)
         self.cwd = '/'
         self.session = requests.session()
         if username and password:
@@ -93,3 +123,14 @@ class Client(object):
         with open(local_path, 'wb') as f:
             #f.write(response.content)
             shutil.copyfileobj(response.raw, f)
+    def ls(self, remote_path):
+        headers = {'Depth': '1'}
+        response = self._send('PROPFIND', remote_path, (207, 301), headers=headers)
+
+        # Redirect
+        if response.status_code == 301:
+            url = urlparse(response.headers['location'])
+            return self.ls(url.path)
+
+        tree = xml.parse(StringIO(response.content))
+        return [elem2file(elem) for elem in tree.findall('{DAV:}response')]
