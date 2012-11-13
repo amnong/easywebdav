@@ -7,8 +7,7 @@ Features
 * Basic authentication
 * Creating directories, removing directories and files
 * Uploading and downloading files
-
-Note: Directory listing is not supported. I'll implement it upon request.
+* Directory listing
 
 Installation
 ------------
