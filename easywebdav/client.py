@@ -61,14 +61,16 @@ class OperationFailed(WebdavException):
         super(OperationFailed, self).__init__(msg)
 
 class Client(object):
-    def __init__(self, host, port=0, username=None, password=None,
+    def __init__(self, host, port=0, auth=None, username=None, password=None,
                  protocol='http'):
         if not port:
             port = 443 if protocol == 'https' else 80
         self.baseurl = '{0}://{1}:{2}'.format(protocol, host ,port)
         self.cwd = '/'
         self.session = requests.session()
-        if username and password:
+        if auth:
+            self.session.auth = auth
+        elif username and password:
             self.session.auth = (username, password)
     def _send(self, method, path, expected_code, **kwargs):
         url = self._get_url(path)
