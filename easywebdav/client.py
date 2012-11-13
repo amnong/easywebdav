@@ -51,7 +51,7 @@ class OperationFailed(WebdavException):
         operation_name = self._OPERATIONS[method]
         self.reason = 'Failed to {operation_name} "{path}"'.format(**locals())
         expected_codes = (expected_code,) if isinstance(expected_code, Number) else expected_code
-        expected_codes_str = ", ".join('{} {}'.format(code, codestr(code)) for code in expected_codes)
+        expected_codes_str = ", ".join('{0} {1}'.format(code, codestr(code)) for code in expected_codes)
         actual_code_str = codestr(actual_code)
         msg = '''\
 {self.reason}.
@@ -65,7 +65,7 @@ class Client(object):
                  protocol='http'):
         if not port:
             port = 443 if protocol == 'https' else 80
-        self.baseurl = '{}://{}:{}'.format(protocol, host ,port)
+        self.baseurl = '{0}://{1}:{2}'.format(protocol, host ,port)
         self.cwd = '/'
         self.session = requests.session()
         if username and password:
