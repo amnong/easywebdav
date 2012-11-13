@@ -125,7 +125,7 @@ class Client(object):
         with open(local_path, 'wb') as f:
             #f.write(response.content)
             shutil.copyfileobj(response.raw, f)
-    def ls(self, remote_path):
+    def ls(self, remote_path='.'):
         headers = {'Depth': '1'}
         response = self._send('PROPFIND', remote_path, (207, 301), headers=headers)
 
