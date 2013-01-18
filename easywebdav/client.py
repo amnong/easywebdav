@@ -136,3 +136,6 @@ class Client(object):
 
         tree = xml.parse(StringIO(response.content))
         return [elem2file(elem) for elem in tree.findall('{DAV:}response')]
+    def exists(self, remote_path):
+        response = self._send('HEAD', remote_path, (200, 201, 404))
+        return True if response.status_code != 404 else False
