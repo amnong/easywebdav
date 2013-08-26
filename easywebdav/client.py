@@ -107,8 +107,13 @@ class Client(object):
         old_cwd = self.cwd
         try:
             for dir in dirs:
-                self.mkdir(dir, safe=True)
-                self.cd(dir)
+                try:
+                    self.mkdir(dir, safe=True)
+                except Exception as e:
+                    if e.actual_code == 409:
+                        raise
+                finally:
+                    self.cd(dir)
         finally:
             self.cd(old_cwd)
     def rmdir(self, path, safe=False):
