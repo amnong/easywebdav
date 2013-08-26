@@ -1,3 +1,4 @@
+import io
 import requests
 import shutil
 from numbers import Number
@@ -69,6 +70,7 @@ class Client(object):
         self.cwd = '/'
         self.session = requests.session()
         self.session.verify = verify_ssl
+        self.session.stream = True
         if auth:
             self.session.auth = auth
         elif username and password:
@@ -125,12 +127,16 @@ class Client(object):
         self._send('DELETE', path, 204)
     def upload(self, local_path, remote_path):
         with open(local_path, 'rb') as f:
-            self._send('PUT', remote_path, (201, 204), data=f.read())
+            self.put(f, remote_path)
+    def put(self, file, remote_path):
+        self._send('PUT', remote_path, (201, 204), data=file.read())
     def download(self, remote_path, local_path):
-        response = self._send('GET', remote_path, 200)
+        response = self.open(remote_path)
         with open(local_path, 'wb') as f:
-            #f.write(response.content)
-            shutil.copyfileobj(response.raw, f)
+            shutil.copyfileobj(response, f)
+    def get(self, remote_path):
+        response = self._send('GET', remote_path, 200)
+        return io.BytesIO(response.content)
     def ls(self, remote_path='.'):
         headers = {'Depth': '1'}
         response = self._send('PROPFIND', remote_path, (207, 301), headers=headers)
