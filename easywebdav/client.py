@@ -96,7 +96,7 @@ class Client(object):
         else:
             self.cwd += stripped_path
     def mkdir(self, path, safe=False):
-        expected_codes = 201 if not safe else (201, 301)
+        expected_codes = 201 if not safe else (201, 301, 405)
         self._send('MKCOL', path, expected_codes)
     def mkdirs(self, path):
         dirs = [d for d in path.split('/') if d]
