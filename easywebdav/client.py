@@ -68,6 +68,7 @@ class Client(object):
         self.baseurl = '{0}://{1}:{2}'.format(protocol, host ,port)
         self.cwd = '/'
         self.session = requests.session()
+        self.session.stream = True
         if auth:
             self.session.auth = auth
         elif username and password:
