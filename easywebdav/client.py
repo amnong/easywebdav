@@ -1,3 +1,4 @@
+import io
 import requests
 import shutil
 from numbers import Number
@@ -69,6 +70,7 @@ class Client(object):
         self.cwd = '/'
         self.session = requests.session()
         self.session.verify = verify_ssl
+        self.session.stream = True
         if auth:
             self.session.auth = auth
         elif username and password:
@@ -97,7 +99,7 @@ class Client(object):
         else:
             self.cwd += stripped_path
     def mkdir(self, path, safe=False):
-        expected_codes = 201 if not safe else (201, 301)
+        expected_codes = 201 if not safe else (201, 301, 405)
         self._send('MKCOL', path, expected_codes)
     def mkdirs(self, path):
         dirs = [d for d in path.split('/') if d]
@@ -108,8 +110,13 @@ class Client(object):
         old_cwd = self.cwd
         try:
             for dir in dirs:
-                self.mkdir(dir, safe=True)
-                self.cd(dir)
+                try:
+                    self.mkdir(dir, safe=True)
+                except Exception as e:
+                    if e.actual_code == 409:
+                        raise
+                finally:
+                    self.cd(dir)
         finally:
             self.cd(old_cwd)
     def rmdir(self, path, safe=False):
@@ -120,12 +127,16 @@ class Client(object):
         self._send('DELETE', path, 204)
     def upload(self, local_path, remote_path):
         with open(local_path, 'rb') as f:
-            self._send('PUT', remote_path, (201, 204), data=f.read())
+            self.put(f, remote_path)
+    def put(self, file, remote_path):
+        self._send('PUT', remote_path, (201, 204), data=file.read())
     def download(self, remote_path, local_path):
-        response = self._send('GET', remote_path, 200)
+        response = self.open(remote_path)
         with open(local_path, 'wb') as f:
-            #f.write(response.content)
-            shutil.copyfileobj(response.raw, f)
+            shutil.copyfileobj(response, f)
+    def get(self, remote_path):
+        response = self._send('GET', remote_path, 200)
+        return io.BytesIO(response.content)
     def ls(self, remote_path='.'):
         headers = {'Depth': '1'}
         response = self._send('PROPFIND', remote_path, (207, 301), headers=headers)
@@ -137,3 +148,6 @@ class Client(object):
 
         tree = xml.parse(StringIO(response.content))
         return [elem2file(elem) for elem in tree.findall('{DAV:}response')]
+    def exists(self, remote_path):
+        response = self._send('HEAD', remote_path, (200, 404))
+        return True if response.status_code != 404 else False
