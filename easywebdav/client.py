@@ -74,10 +74,12 @@ class OperationFailed(WebdavException):
 
 class Client(object):
     def __init__(self, host, port=0, auth=None, username=None, password=None,
-                 protocol='http', verify_ssl=True, path="/"):
+                 protocol='http', verify_ssl=True, path=None):
         if not port:
             port = 443 if protocol == 'https' else 80
-        self.baseurl = '{0}://{1}:{2}{3}'.format(protocol, host, port, path)
+        self.baseurl = '{0}://{1}:{2}'.format(protocol, host, port)
+        if path:
+            self.baseurl = '{0}/{1}'.format(self.baseurl, path)
         self.cwd = '/'
         self.session = requests.session()
         self.session.verify = verify_ssl
@@ -152,7 +154,7 @@ class Client(object):
         self._send('PUT', remote_path, (201, 204), data=file.read())
 
     def download(self, remote_path, local_path):
-        response = self.open(remote_path)
+        response = self.get(remote_path)
         with open(local_path, 'wb') as f:
             shutil.copyfileobj(response, f)
 
@@ -171,6 +173,7 @@ class Client(object):
 
         tree = xml.parse(StringIO(response.content))
         return [elem2file(elem) for elem in tree.findall('{DAV:}response')]
+
     def exists(self, remote_path):
         response = self._send('HEAD', remote_path, (200, 404))
         return True if response.status_code != 404 else False
