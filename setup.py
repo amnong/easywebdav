@@ -11,7 +11,7 @@ setup(name="easywebdav",
       classifiers = [
           "Development Status :: 4 - Beta",
           "Intended Audience :: Developers",
-          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3.3",
           ],
       description="A straight-forward WebDAV client, implemented using Requests",
       license="ISC",

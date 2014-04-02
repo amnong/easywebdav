@@ -2,11 +2,11 @@ import io
 import requests
 import shutil
 from numbers import Number
-from httplib import responses as HTTP_CODES
-from urlparse import urlparse
+from http.client import responses as HTTP_CODES
+from urllib.parse import urlparse
 import xml.etree.cElementTree as xml
 from collections import namedtuple
-from cStringIO import StringIO
+from io import StringIO
 
 class WebdavException(Exception):
     pass
