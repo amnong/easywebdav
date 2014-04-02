@@ -1,12 +1,21 @@
 import io
 import requests
 import shutil
+import platform
 from numbers import Number
-from http.client import responses as HTTP_CODES
-from urllib.parse import urlparse
 import xml.etree.cElementTree as xml
 from collections import namedtuple
-from io import StringIO
+
+py_majversion, py_minversion, py_revversion = platform.python_version_tuple()
+
+if py_majversion == '2':
+    from cStringIO import StringIO
+    from httplib import responses as HTTP_CODES
+    from urlparse import urlparse
+else:
+    from io import StringIO
+    from http.client import responses as HTTP_CODES
+    from urllib.parse import urlparse
 
 class WebdavException(Exception):
     pass
