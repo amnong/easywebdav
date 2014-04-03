@@ -48,6 +48,7 @@ def elem2file(elem):
 
 class OperationFailed(WebdavException):
     _OPERATIONS = dict(
+        HEAD = "get header",
         GET = "download",
         PUT = "upload",
         DELETE = "delete",
