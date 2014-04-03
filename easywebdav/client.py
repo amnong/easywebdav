@@ -48,6 +48,7 @@ def elem2file(elem):
 
 class OperationFailed(WebdavException):
     _OPERATIONS = dict(
+        HEAD = "get header",
         GET = "download",
         PUT = "upload",
         DELETE = "delete",
@@ -171,7 +172,7 @@ class Client(object):
             url = urlparse(response.headers['location'])
             return self.ls(url.path)
 
-        tree = xml.parse(StringIO(response.content))
+        tree = xml.fromstring(response.content)
         return [elem2file(elem) for elem in tree.findall('{DAV:}response')]
 
     def exists(self, remote_path):
