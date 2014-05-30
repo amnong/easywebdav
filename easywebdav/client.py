@@ -1,6 +1,4 @@
-import io
 import requests
-import shutil
 import platform
 from numbers import Number
 import xml.etree.cElementTree as xml
@@ -14,6 +12,8 @@ if py_majversion == '2':
 else:
     from http.client import responses as HTTP_CODES
     from urllib.parse import urlparse
+
+DOWNLOAD_CHUNK_SIZE_BYTES = 1 * 1024 * 1024
 
 class WebdavException(Exception):
     pass
@@ -149,21 +149,27 @@ class Client(object):
     def delete(self, path):
         self._send('DELETE', path, 204)
 
-    def upload(self, local_path, remote_path):
-        with open(local_path, 'rb') as f:
-            self.put(f, remote_path)
+    def upload(self, local_path_or_fileobj, remote_path):
+        if isinstance(local_path_or_fileobj, basestring):
+            with open(local_path_or_fileobj, 'rb') as f:
+                self._upload(f, remote_path)
+        else:
+            self._upload(local_path_or_fileobj, remote_path)
 
-    def put(self, file, remote_path):
-        self._send('PUT', remote_path, (200, 201, 204), data=file.read())
+    def _upload(self, fileobj, remote_path):
+        self._send('PUT', remote_path, (200, 201, 204), data=fileobj)
 
-    def download(self, remote_path, local_path):
-        response = self.get(remote_path)
-        with open(local_path, 'wb') as f:
-            shutil.copyfileobj(response, f)
+    def download(self, remote_path, local_path_or_fileobj):
+        response = self._send('GET', remote_path, 200, stream=True)
+        if isinstance(local_path_or_fileobj, basestring):
+            with open(local_path_or_fileobj, 'wb') as f:
+                self._download(f, response)
+        else:
+            self._download(local_path_or_fileobj, response)
 
-    def get(self, remote_path):
-        response = self._send('GET', remote_path, 200)
-        return io.BytesIO(response.content)
+    def _download(self, fileobj, response):
+        for chunk in response.iter_content(DOWNLOAD_CHUNK_SIZE_BYTES):
+            fileobj.write(chunk)
 
     def ls(self, remote_path='.'):
         headers = {'Depth': '1'}

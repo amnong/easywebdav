@@ -36,12 +36,14 @@ Client object API
 The API is pretty much self-explanatory:
 
     cd(path)
+    ls(path=None)
+    exists(remote_path)
     mkdir(path, safe=False)
     mkdirs(path)
     rmdir(path, safe=False)
     delete(file_path)
-    upload(local_path, remote_path)
-    download(remote_path, local_path)
+    upload(local_path_or_fileobj, remote_path)
+    download(remote_path, local_path_or_fileobj)
 
 Using clientside SSL certificate
 --------------------------------
