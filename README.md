@@ -56,3 +56,25 @@ Using clientside SSL certificate
 
 Please note that all options and restriction regarding the "cert" parameter from
 [Requests API](http://docs.python-requests.org/en/latest/api/) apply here as the parameter is only passed through!
+
+Developing EasyWebDAV
+---------------------
+
+Working with a virtual environment is highly recommended:
+
+    virtualenv --no-site-packages easywebdav_dev
+    source easywebdav_dev/bin/activate
+
+Installing the library in development-mode:
+
+    EASYWEBDAV_DEV=1 python setup.py develop
+
+The first part of the command causes setup.py to install development dependencies, in addition to the normal dependencies.
+
+Running the tests:
+
+    nosetests --with-yanc --nologcapture --nocapture tests
+
+Running the tests with WebDAV server logs:
+
+    WEBDAV_LOGS=1 nosetests --with-yanc --nologcapture --nocapture -v tests
