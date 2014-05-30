@@ -29,3 +29,7 @@ pip-log.txt
 \#*\#
 .#*
 *.swp
+
+#### Other
+.DS_Store
+._.DS_Store

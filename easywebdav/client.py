@@ -9,11 +9,9 @@ from collections import namedtuple
 py_majversion, py_minversion, py_revversion = platform.python_version_tuple()
 
 if py_majversion == '2':
-    from cStringIO import StringIO
     from httplib import responses as HTTP_CODES
     from urlparse import urlparse
 else:
-    from io import StringIO
     from http.client import responses as HTTP_CODES
     from urllib.parse import urlparse
 
@@ -176,5 +174,5 @@ class Client(object):
         return [elem2file(elem) for elem in tree.findall('{DAV:}response')]
 
     def exists(self, remote_path):
-        response = self._send('HEAD', remote_path, (200, 404))
+        response = self._send('HEAD', remote_path, (200, 301, 404))
         return True if response.status_code != 404 else False
