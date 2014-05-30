@@ -73,7 +73,7 @@ class OperationFailed(WebdavException):
 
 class Client(object):
     def __init__(self, host, port=0, auth=None, username=None, password=None,
-                 protocol='http', verify_ssl=True, path=None):
+                 protocol='http', verify_ssl=True, path=None, cert=None):
         if not port:
             port = 443 if protocol == 'https' else 80
         self.baseurl = '{0}://{1}:{2}'.format(protocol, host, port)
@@ -83,6 +83,10 @@ class Client(object):
         self.session = requests.session()
         self.session.verify = verify_ssl
         self.session.stream = True
+
+        if cert:
+            self.session.cert = cert
+
         if auth:
             self.session.auth = auth
         elif username and password:
