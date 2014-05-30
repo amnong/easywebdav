@@ -150,7 +150,7 @@ class Client(object):
             self.put(f, remote_path)
 
     def put(self, file, remote_path):
-        self._send('PUT', remote_path, (201, 204), data=file.read())
+        self._send('PUT', remote_path, (200, 201, 204), data=file.read())
 
     def download(self, remote_path, local_path):
         response = self.get(remote_path)
